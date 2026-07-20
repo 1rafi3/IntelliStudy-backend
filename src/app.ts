@@ -1,5 +1,4 @@
 import express, { Application } from 'express';
-import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
@@ -29,24 +28,41 @@ export const createApp = (): Application => {
   const app = express();
 
   // ── Security Headers ────────────────────────────────────────────────────────
-  app.use(helmet());
-
-  // ── CORS ────────────────────────────────────────────────────────────────────
+  // crossOriginOpenerPolicy: 'unsafe-none' allows Google Sign-In popup postMessage
   app.use(
-    cors({
-      origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, curl, Postman)
-        if (!origin || allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else {
-          callback(new Error(`CORS blocked: origin ${origin} is not allowed`));
-        }
-      },
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    helmet({
+      crossOriginOpenerPolicy: { policy: 'unsafe-none' },
     }),
   );
+
+  // ── CORS ────────────────────────────────────────────────────────────────────
+  // Manual middleware (not using cors package) for reliable Vercel preflight handling.
+  // The cors package relies on serverless-http's 204 handling, which can drop headers.
+  const corsOrigins = [...new Set([...allowedOrigins, env.FRONTEND_URL])];
+
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (origin && !corsOrigins.includes(origin)) {
+      return next();
+    }
+
+    if (origin) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With');
+
+    // Short-circuit OPTIONS preflight — must respond before any other middleware
+    if (req.method === 'OPTIONS') {
+      res.sendStatus(204);
+      return;
+    }
+
+    next();
+  });
 
   // ── Body Parsing ────────────────────────────────────────────────────────────
   app.use(express.json({ limit: '10mb' }));
