@@ -98,11 +98,16 @@ export const authService = {
   },
 
   loginWithGoogle: async (idToken: string): Promise<{ user: AuthResponse['user']; tokens: AuthTokens }> => {
-    const ticket = await googleClient.verifyIdToken({
-      idToken,
-      audience: env.GOOGLE_CLIENT_ID,
-    });
-    const payload = ticket.getPayload();
+    let payload;
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } catch {
+      throw ApiError.unauthorized('Invalid or expired Google token');
+    }
     if (!payload) throw ApiError.unauthorized('Invalid Google token');
 
     const { sub, email, name, picture } = payload;
