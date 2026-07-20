@@ -22,6 +22,7 @@ import { profileRouter } from '@features/profile/profile.route';
 import { analyticsRouter } from '@features/analytics/analytics.route';
 import { reviewRouter } from '@features/review/review.route';
 import { aiRouter } from '@features/ai/ai.route';
+import { searchRouter } from '@features/search/search.route';
 
 // ─── Application Factory ──────────────────────────────────────────────────────
 export const createApp = (): Application => {
@@ -93,6 +94,7 @@ export const createApp = (): Application => {
   app.use(`${apiPrefix}/ai`, aiRouter);
   app.use(`${apiPrefix}/profile`, profileRouter);
   app.use(`${apiPrefix}/analytics`, analyticsRouter);
+  app.use(`${apiPrefix}/search`, searchRouter);
 
   // ── 404 Handler ─────────────────────────────────────────────────────────────
   app.use(notFoundMiddleware);
