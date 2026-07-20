@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import { createApp } from './app';
 import { connectDB, disconnectDB } from '@config/db';
-import { verifyCloudinary } from '@config/cloudinary';
 import { verifyGemini } from '@config/gemini';
 import { env } from '@config/env';
 import { logger } from '@shared/utils/logger';
@@ -21,7 +20,6 @@ if (!isVercel) {
     await connectDB();
 
     // 2. Verify third-party services (non-fatal)
-    await verifyCloudinary();
     await verifyGemini();
 
     // 3. Start Express app
