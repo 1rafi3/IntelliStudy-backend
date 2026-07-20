@@ -172,6 +172,18 @@ You MUST respond ONLY with a JSON array matching the following schema:
   },
 
   /**
+   * Get a single recommendation by ID regardless of read status.
+   */
+  getById: async (id: string, userId: string): Promise<any> => {
+    const doc = await Recommendation.findOne({ _id: id, user: userId })
+      .populate('relatedRoadmap', 'title subject progress status');
+    if (!doc) {
+      throw ApiError.notFound('Recommendation not found');
+    }
+    return recommendationUtils.serialize(doc);
+  },
+
+  /**
    * Delete a recommendation.
    */
   dismiss: async (id: string, userId: string): Promise<void> => {

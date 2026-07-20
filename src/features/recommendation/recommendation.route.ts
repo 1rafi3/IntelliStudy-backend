@@ -12,6 +12,8 @@ router.use(authenticate);
 
 router.get('/', recommendationController.getAll);
 
+router.get('/:id', validate(recommendationIdSchema), recommendationController.getById);
+
 router.post('/refresh', aiRateLimiter, recommendationController.refresh);
 
 router.patch(

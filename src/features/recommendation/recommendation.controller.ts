@@ -29,6 +29,17 @@ export const recommendationController = {
   }),
 
   /**
+   * Get a single recommendation by ID.
+   */
+  getById: asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    if (!req.user) {
+      throw ApiError.unauthorized();
+    }
+    const data = await recommendationService.getById(req.params.id, req.user.id);
+    sendSuccess(res, data, 'Recommendation retrieved successfully');
+  }),
+
+  /**
    * Mark a specific recommendation as read.
    */
   markAsRead: asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
