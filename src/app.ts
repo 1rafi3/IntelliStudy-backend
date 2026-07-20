@@ -19,6 +19,7 @@ import { dashboardRouter } from '@features/dashboard/dashboard.route';
 import { plannerRouter } from '@features/planner/planner.route';
 import { bookmarkRouter } from '@features/bookmark/bookmark.route';
 import { profileRouter } from '@features/profile/profile.route';
+import { analyticsRouter } from '@features/analytics/analytics.route';
 import { reviewRouter } from '@features/review/review.route';
 import { aiRouter } from '@features/ai/ai.route';
 
@@ -91,6 +92,7 @@ export const createApp = (): Application => {
   app.use(`${apiPrefix}/reviews`, reviewRouter);
   app.use(`${apiPrefix}/ai`, aiRouter);
   app.use(`${apiPrefix}/profile`, profileRouter);
+  app.use(`${apiPrefix}/analytics`, analyticsRouter);
 
   // ── 404 Handler ─────────────────────────────────────────────────────────────
   app.use(notFoundMiddleware);
