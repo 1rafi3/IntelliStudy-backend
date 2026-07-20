@@ -30,8 +30,8 @@ export const logger = winston.createLogger({
       format: env.NODE_ENV === 'production' ? logFormat : consoleFormat,
     }),
 
-    // In production, also write errors to a file
-    ...(env.NODE_ENV === 'production'
+    // In production (non‑Vercel), also write errors to a file
+    ...(env.NODE_ENV === 'production' && !process.env.VERCEL
       ? [
           new winston.transports.File({
             filename: 'logs/error.log',

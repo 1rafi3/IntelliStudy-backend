@@ -10,10 +10,16 @@ import { logger } from '@shared/utils/logger';
 // with ECONNREFUSED. Explicitly setting DNS servers before connecting fixes it.
 dns.setServers(['1.1.1.1', '8.8.8.8', '8.8.4.4']);
 
+// ─── Connection Cache ─────────────────────────────────────────────────────────
+// Reuse the same connection across serverless warm invocations.
+let cachedConnection: typeof mongoose | null = null;
+
 // ─── MongoDB Connection ───────────────────────────────────────────────────────
-// Establishes a single connection to MongoDB Atlas.
-// Called once at server startup in src/index.ts.
+// Establishes a mongoose connection to MongoDB Atlas.
+// Uses a cached connection for serverless environments (Vercel).
 export const connectDB = async (): Promise<void> => {
+  if (cachedConnection && mongoose.connection.readyState === 1) return;
+
   try {
     mongoose.set('strictQuery', true);
 
@@ -22,21 +28,29 @@ export const connectDB = async (): Promise<void> => {
       socketTimeoutMS: 45000,
     });
 
+    cachedConnection = conn;
     logger.info(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     logger.error('❌ MongoDB connection failed:', error);
-    process.exit(1);
+    // In serverless, don't crash — let the request fail gracefully
+    if (!process.env.VERCEL) {
+      process.exit(1);
+    }
+    throw error;
   }
 };
 
 // ─── Disconnect (for graceful shutdown / tests) ───────────────────────────────
 export const disconnectDB = async (): Promise<void> => {
+  if (mongoose.connection.readyState === 0) return;
   await mongoose.disconnect();
+  cachedConnection = null;
   logger.info('🔌 MongoDB disconnected');
 };
 
 // ─── Connection Event Listeners ───────────────────────────────────────────────
 mongoose.connection.on('disconnected', () => {
+  cachedConnection = null;
   logger.warn('⚠️  MongoDB disconnected — attempting reconnect...');
 });
 

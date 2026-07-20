@@ -20,8 +20,11 @@ export const authController = {
     sendSuccess(res, { user, accessToken: tokens.accessToken }, 'Login successful');
   }),
 
-  loginWithGoogle: asyncHandler(async (_req: Request, res: Response): Promise<void> => {
-    sendSuccess(res, null, 'googleOAuth — not yet implemented');
+  loginWithGoogle: asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const { idToken } = req.body;
+    const { user, tokens } = await authService.loginWithGoogle(idToken);
+    authUtils.setRefreshTokenCookie(res, tokens.refreshToken);
+    sendSuccess(res, { user, accessToken: tokens.accessToken }, 'Google login successful');
   }),
 
   refreshToken: asyncHandler(async (req: Request, res: Response): Promise<void> => {

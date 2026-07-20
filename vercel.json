@@ -1,23 +1,17 @@
 {
   "version": 2,
-  "name": "intellistudy-ai-backend",
+  "buildCommand": "npm run vercel-build",
+  "installCommand": "npm install",
   "builds": [
     {
-      "src": "src/index.ts",
+      "src": "dist/index.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "src/index.ts"
-    },
-    {
       "src": "/(.*)",
-      "dest": "src/index.ts"
+      "dest": "dist/index.js"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
