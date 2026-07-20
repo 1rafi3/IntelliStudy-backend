@@ -46,3 +46,22 @@ coverage/
 .cache/
 tmp/
 temp/
+*.tmp
+*.temp
+*.local
+
+# ─── Debug & Test Scripts ───
+# One-off scripts created during development/debugging — never ship to remote
+src/test-*.ts
+src/test-*.js
+src/*.test.ts
+src/*.test.js
+
+# ─── Vercel ───
+.vercel/
+
+# ─── Certificates & Keys ───
+*.pem
+*.key
+*.cert
+*.p12

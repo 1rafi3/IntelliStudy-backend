@@ -1,2 +1,12 @@
 import { z } from 'zod';
-export const generateRecommendationSchema = z.object({ body: z.object({ topic: z.string().min(1).optional(), limit: z.number().int().min(1).max(20).optional() }) });
+import mongoose from 'mongoose';
+
+const objectIdSchema = z.string().refine((val) => mongoose.Types.ObjectId.isValid(val), {
+  message: 'Invalid ObjectId format',
+});
+
+export const recommendationIdSchema = z.object({
+  params: z.object({
+    id: objectIdSchema,
+  }),
+});

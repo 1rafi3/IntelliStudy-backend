@@ -4,6 +4,8 @@ import { sendSuccess, sendCreated, sendNoContent } from '@shared/utils/response-
 import { aiService } from './ai.service';
 import { AuthenticatedRequest } from '@shared/types';
 import { ApiError } from '@shared/utils/api-error';
+import { recommendationService } from '@features/recommendation/recommendation.service';
+import { logger } from '@shared/utils/logger';
 
 export const aiController = {
   // ── AI Roadmap Generation ──────────────────────────────────────────────────
@@ -43,6 +45,12 @@ export const aiController = {
       throw ApiError.unauthorized();
     }
     const result = await aiService.saveRoadmap(authReq.user.id, req.body);
+
+    // Background refresh recommendations
+    recommendationService.generate(authReq.user.id).catch((err) => {
+      logger.error('Failed to trigger background recommendation refresh after saving AI roadmap:', err);
+    });
+
     sendCreated(res, result, 'Roadmap saved to your dashboard successfully');
   }),
 };

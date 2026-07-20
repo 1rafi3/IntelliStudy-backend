@@ -1,9 +1,52 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { asyncHandler } from '@shared/utils/async-handler';
 import { sendSuccess } from '@shared/utils/response-formatter';
+import { recommendationService } from './recommendation.service';
+import { AuthenticatedRequest } from '@shared/types';
+import { ApiError } from '@shared/utils/api-error';
 
 export const recommendationController = {
-  generate: asyncHandler(async (_req: Request, res: Response): Promise<void> => { sendSuccess(res, [], 'generate — not yet implemented'); }),
-  getAll:   asyncHandler(async (_req: Request, res: Response): Promise<void> => { sendSuccess(res, [], 'getAll — not yet implemented'); }),
-  dismiss:  asyncHandler(async (_req: Request, res: Response): Promise<void> => { sendSuccess(res, null, 'dismiss — not yet implemented'); }),
+  /**
+   * Get all recommendations for the authenticated user.
+   */
+  getAll: asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    if (!req.user) {
+      throw ApiError.unauthorized();
+    }
+    const data = await recommendationService.getAll(req.user.id);
+    sendSuccess(res, data, 'Recommendations retrieved successfully');
+  }),
+
+  /**
+   * Manually trigger re-generation of recommendations using Gemini.
+   */
+  refresh: asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    if (!req.user) {
+      throw ApiError.unauthorized();
+    }
+    const data = await recommendationService.generate(req.user.id);
+    sendSuccess(res, data, 'Recommendations regenerated successfully');
+  }),
+
+  /**
+   * Mark a specific recommendation as read.
+   */
+  markAsRead: asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    if (!req.user) {
+      throw ApiError.unauthorized();
+    }
+    const data = await recommendationService.markAsRead(req.params.id, req.user.id);
+    sendSuccess(res, data, 'Recommendation marked as read');
+  }),
+
+  /**
+   * Dismiss/Delete a recommendation.
+   */
+  dismiss: asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    if (!req.user) {
+      throw ApiError.unauthorized();
+    }
+    await recommendationService.dismiss(req.params.id, req.user.id);
+    sendSuccess(res, null, 'Recommendation dismissed');
+  }),
 };
