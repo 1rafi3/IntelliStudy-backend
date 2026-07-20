@@ -132,6 +132,11 @@ export const authService = {
       email: user.email,
       role: user.role,
       avatar: user.avatar,
+      learningGoal: user.learningGoal || '',
+      currentLevel: user.currentLevel || '',
+      learningStyle: user.learningStyle || '',
+      preferredLanguage: user.preferredLanguage || '',
+      weeklyStudyHours: user.weeklyStudyHours || 0,
     };
   },
 };

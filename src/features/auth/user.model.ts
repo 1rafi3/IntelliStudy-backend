@@ -20,11 +20,10 @@ const userSchema = new Schema<IUser>(
     },
     password: {
       type: String,
-      // Password is not required if signing up via Google OAuth
       required: function (this: IUser) {
         return this.provider === 'local';
       },
-      select: false, // Don't return password by default in queries
+      select: false,
     },
     avatar: {
       type: String,
@@ -39,6 +38,32 @@ const userSchema = new Schema<IUser>(
       type: String,
       enum: ['user', 'admin'],
       default: 'user',
+    },
+    learningGoal: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    currentLevel: {
+      type: String,
+      enum: ['beginner', 'intermediate', 'advanced', ''],
+      default: '',
+    },
+    learningStyle: {
+      type: String,
+      enum: ['visual', 'auditory', 'reading', 'kinesthetic', ''],
+      default: '',
+    },
+    preferredLanguage: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    weeklyStudyHours: {
+      type: Number,
+      min: 0,
+      max: 168,
+      default: 0,
     },
   },
   {
