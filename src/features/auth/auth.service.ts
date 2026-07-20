@@ -62,8 +62,20 @@ export const authService = {
       throw ApiError.badRequest('Password is required');
     }
 
-    // Explicitly select the password field since it is hidden by default in user schema
-    const user = await User.findOne({ email }).select('+password');
+    let user = await User.findOne({ email }).select('+password');
+
+    // Auto-create demo account on first login
+    if (!user && email === env.DEMO_EMAIL && password === env.DEMO_PASSWORD) {
+      const hashedPassword = await authUtils.hashPassword(password);
+      user = await User.create({
+        name: 'Demo User',
+        email,
+        password: hashedPassword,
+        provider: 'local',
+        role: 'user',
+      });
+    }
+
     if (!user || user.provider !== 'local') {
       throw ApiError.unauthorized('Invalid email or password');
     }

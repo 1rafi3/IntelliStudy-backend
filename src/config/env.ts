@@ -34,6 +34,10 @@ const envSchema = z.object({
   FRONTEND_URL: z.string().url('FRONTEND_URL must be a valid URL'),
   ALLOWED_ORIGINS: z.string().min(1, 'ALLOWED_ORIGINS is required'),
 
+  // Demo
+  DEMO_EMAIL: z.string().default('demo@intellistudy.ai'),
+  DEMO_PASSWORD: z.string().default('Demo1234'),
+
   // Cookies
   COOKIE_SECRET: z.string().min(1, 'COOKIE_SECRET is required'),
   COOKIE_SECURE: z
