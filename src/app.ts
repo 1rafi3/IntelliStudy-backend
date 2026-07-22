@@ -6,6 +6,7 @@ import mongoSanitize from 'express-mongo-sanitize';
 import hpp from 'hpp';
 
 import { env, allowedOrigins } from '@config/env';
+import { ensureDB } from '@config/db';
 import { requestLogger } from '@shared/middleware/request-logger.middleware';
 import { globalRateLimiter } from '@shared/middleware/rate-limiter.middleware';
 import { errorMiddleware, notFoundMiddleware } from '@shared/middleware/error.middleware';
@@ -85,6 +86,9 @@ export const createApp = (): Application => {
 
   // ── Global Rate Limiting ────────────────────────────────────────────────────
   app.use(globalRateLimiter);
+
+  // ── DB Connection (ensures MongoDB is connected before handling requests) ────
+  app.use(ensureDB);
 
   // ── Health Check ────────────────────────────────────────────────────────────
   app.get('/health', (_req, res) => {

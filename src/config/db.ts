@@ -1,5 +1,6 @@
 import dns from 'dns';
 import mongoose from 'mongoose';
+import { Request, Response, NextFunction } from 'express';
 import { env } from './env';
 import { logger } from '@shared/utils/logger';
 
@@ -13,6 +14,7 @@ dns.setServers(['1.1.1.1', '8.8.8.8', '8.8.4.4']);
 // ─── Connection Cache ─────────────────────────────────────────────────────────
 // Reuse the same connection across serverless warm invocations.
 let cachedConnection: typeof mongoose | null = null;
+let connectPromise: Promise<void> | null = null;
 
 // ─── MongoDB Connection ───────────────────────────────────────────────────────
 // Establishes a mongoose connection to MongoDB Atlas.
@@ -20,23 +22,43 @@ let cachedConnection: typeof mongoose | null = null;
 export const connectDB = async (): Promise<void> => {
   if (cachedConnection && mongoose.connection.readyState === 1) return;
 
+  if (!connectPromise) {
+    connectPromise = mongoose
+      .connect(env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+      })
+      .then((conn) => {
+        mongoose.set('strictQuery', true);
+        cachedConnection = conn;
+        logger.info(`✅ MongoDB Connected: ${conn.connection.host}`);
+      })
+      .catch((error) => {
+        connectPromise = null; // Allow retry on next request
+        logger.error('❌ MongoDB connection failed:', error);
+        if (!process.env.VERCEL) {
+          process.exit(1);
+        }
+        throw error;
+      });
+  }
+
+  return connectPromise;
+};
+
+// ─── DB Connection Middleware ──────────────────────────────────────────────────
+// Ensures MongoDB is connected before processing API requests in serverless.
+// Must be registered before routes in app.ts.
+export const ensureDB = async (
+  _req: Request,
+  _res: Response,
+  next: NextFunction,
+): Promise<void> => {
   try {
-    mongoose.set('strictQuery', true);
-
-    const conn = await mongoose.connect(env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-    });
-
-    cachedConnection = conn;
-    logger.info(`✅ MongoDB Connected: ${conn.connection.host}`);
+    await connectDB();
+    next();
   } catch (error) {
-    logger.error('❌ MongoDB connection failed:', error);
-    // In serverless, don't crash — let the request fail gracefully
-    if (!process.env.VERCEL) {
-      process.exit(1);
-    }
-    throw error;
+    next(error);
   }
 };
 
